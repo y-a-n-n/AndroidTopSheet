@@ -16,6 +16,7 @@ package com.github.techisfun.android.topsheet;
  */
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -25,6 +26,8 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatDialog;
 import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -33,9 +36,12 @@ import android.widget.FrameLayout;
 /**
  * Created by andrea on 23/08/16.
  */
-public class TopSheetDialog extends AppCompatDialog {
+public class TopSheetDialog extends AppCompatDialog
+{
 
     private TopSheetBehavior<FrameLayout> topSheetBehavior;
+    private FrameLayout topSheet;
+
 
     public TopSheetDialog(@NonNull Context context) {
         super(context, getThemeResId(context, 0));
@@ -65,6 +71,13 @@ public class TopSheetDialog extends AppCompatDialog {
         super.onCreate(savedInstanceState);
         getWindow().setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        setOnShowListener(new OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) topSheet.getLayoutParams();
+                params.setAnchorId(View.NO_ID);
+            }
+        });
     }
 
     @Override
@@ -78,12 +91,13 @@ public class TopSheetDialog extends AppCompatDialog {
     }
 
     private View wrapInTopSheet(int layoutResId, View view, ViewGroup.LayoutParams params) {
-        final CoordinatorLayout coordinator = (CoordinatorLayout) View.inflate(getContext(),
+        final FrameLayout container = (FrameLayout) View.inflate(getContext(),
                 R.layout.top_sheet_dialog, null);
+        CoordinatorLayout coordinator = container.findViewById(R.id.top_sheet_layout);
         if (layoutResId != 0 && view == null) {
-            view = getLayoutInflater().inflate(layoutResId, coordinator, false);
+            view = getLayoutInflater().inflate(layoutResId, container, false);
         }
-        FrameLayout topSheet = (FrameLayout) coordinator.findViewById(R.id.design_top_sheet);
+        topSheet = coordinator.findViewById(R.id.design_top_sheet);
         topSheetBehavior = TopSheetBehavior.from(topSheet);
         topSheetBehavior.setTopSheetCallback(mTopSheetCallback);
         if (params == null) {
@@ -103,7 +117,12 @@ public class TopSheetDialog extends AppCompatDialog {
                         }
                     });
         }
-        return coordinator;
+        topSheet.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View view, MotionEvent event) {
+                return true;
+            }
+        });
+        return container;
     }
 
     private boolean shouldWindowCloseOnTouchOutside() {
@@ -126,7 +145,9 @@ public class TopSheetDialog extends AppCompatDialog {
     @Override
     public void show() {
         super.show();
-        //topSheetBehavior.setState(TopSheetBehavior.STATE_EXPANDED);
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) topSheet.getLayoutParams();
+        params.setAnchorId(R.id.top_sheet_touch_outside);
+        params.anchorGravity = Gravity.TOP;
     }
 
     private static int getThemeResId(Context context, int themeId) {
@@ -134,7 +155,7 @@ public class TopSheetDialog extends AppCompatDialog {
             // If the provided theme is 0, then retrieve the dialogTheme from our theme
             TypedValue outValue = new TypedValue();
             if (context.getTheme().resolveAttribute(
-                    android.support.design.R.attr.bottomSheetDialogTheme, outValue, true)) {
+                    R.attr.bottomSheetDialogTheme, outValue, true)) {
                 themeId = outValue.resourceId;
             } else {
                 // bottomSheetDialogTheme is not provided; we default to our light theme
@@ -149,15 +170,16 @@ public class TopSheetDialog extends AppCompatDialog {
         @Override
         public void onStateChanged(@NonNull View topSheet,
                                    @BottomSheetBehavior.State int newState) {
-            if (newState == TopSheetBehavior.STATE_HIDDEN) {
+            if (newState == TopSheetBehavior.STATE_HIDDEN || newState == TopSheetBehavior.STATE_COLLAPSED) {
                 dismiss();
             }
         }
 
         @Override
         public void onSlide(@NonNull View topSheet, float slideOffset) {
+
         }
+
+
     };
-
-
 }
