@@ -21,17 +21,19 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.v4.os.ParcelableCompat;
-import android.support.v4.os.ParcelableCompatCreatorCallbacks;
-import android.support.v4.view.AbsSavedState;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v4.view.NestedScrollingChild;
-import android.support.v4.view.VelocityTrackerCompat;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.ViewDragHelper;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.os.ParcelableCompat;
+import androidx.core.os.ParcelableCompatCreatorCallbacks;
+import androidx.core.view.MotionEventCompat;
+import androidx.core.view.NestedScrollingChild;
+import androidx.core.view.VelocityTrackerCompat;
+import androidx.core.view.ViewCompat;
+import androidx.customview.view.AbsSavedState;
+import androidx.customview.widget.ViewDragHelper;
+
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -166,11 +168,11 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
     public TopSheetBehavior(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs,
-                android.support.design.R.styleable.BottomSheetBehavior_Layout);
+                R.styleable.BottomSheetBehavior_Layout);
         setPeekHeight(a.getDimensionPixelSize(
-                android.support.design.R.styleable.BottomSheetBehavior_Layout_behavior_peekHeight, 0));
-        setHideable(a.getBoolean(android.support.design.R.styleable.BottomSheetBehavior_Layout_behavior_hideable, false));
-        setSkipCollapsed(a.getBoolean(android.support.design.R.styleable.BottomSheetBehavior_Layout_behavior_skipCollapsed,
+                R.styleable.BottomSheetBehavior_Layout_behavior_peekHeight, 0));
+        setHideable(a.getBoolean(R.styleable.BottomSheetBehavior_Layout_behavior_hideable, false));
+        setSkipCollapsed(a.getBoolean(R.styleable.BottomSheetBehavior_Layout_behavior_skipCollapsed,
                 false));
         a.recycle();
         ViewConfiguration configuration = ViewConfiguration.get(context);
@@ -282,7 +284,9 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
         if (mState == STATE_DRAGGING && action == MotionEvent.ACTION_DOWN) {
             return true;
         }
-        mViewDragHelper.processTouchEvent(event);
+        if (mViewDragHelper != null) {
+            mViewDragHelper.processTouchEvent(event);
+        }
         // Record the velocity
         if (action == MotionEvent.ACTION_DOWN) {
             reset();
@@ -293,7 +297,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
         mVelocityTracker.addMovement(event);
         // The ViewDragHelper tries to capture only the top-most View. We have to explicitly tell it
         // to capture the bottom sheet in case it is not captured and the touch slop is passed.
-        if (action == MotionEvent.ACTION_MOVE && !mIgnoreEvents) {
+        if (mViewDragHelper != null && action == MotionEvent.ACTION_MOVE && !mIgnoreEvents) {
             if (Math.abs(mInitialY - event.getY()) > mViewDragHelper.getTouchSlop()) {
                 mViewDragHelper.captureChildView(child, event.getPointerId(event.getActionIndex()));
             }
@@ -399,7 +403,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * Sets the height of the bottom sheet when it is collapsed.
      *
      * @param peekHeight The height of the collapsed bottom sheet in pixels.
-     * @attr ref android.support.design.R.styleable#TopSheetBehavior_Params_behavior_peekHeight
+     * @attr ref R.styleable#TopSheetBehavior_Params_behavior_peekHeight
      */
     public final void setPeekHeight(int peekHeight) {
         mPeekHeight = Math.max(0, peekHeight);
@@ -413,7 +417,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * Gets the height of the bottom sheet when it is collapsed.
      *
      * @return The height of the collapsed bottom sheet.
-     * @attr ref android.support.design.R.styleable#BottomSheetBehavior_Layout_behavior_peekHeight
+     * @attr ref R.styleable#BottomSheetBehavior_Layout_behavior_peekHeight
      */
     public final int getPeekHeight() {
         return mPeekHeight;
@@ -423,7 +427,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * Sets whether this bottom sheet can hide when it is swiped down.
      *
      * @param hideable {@code true} to make this bottom sheet hideable.
-     * @attr ref android.support.design.R.styleable#BottomSheetBehavior_Layout_behavior_hideable
+     * @attr ref R.styleable#BottomSheetBehavior_Layout_behavior_hideable
      */
     public void setHideable(boolean hideable) {
         mHideable = hideable;
@@ -433,7 +437,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * Gets whether this bottom sheet can hide when it is swiped down.
      *
      * @return {@code true} if this bottom sheet can hide.
-     * @attr ref android.support.design.R.styleable#BottomSheetBehavior_Layout_behavior_hideable
+     * @attr ref R.styleable#BottomSheetBehavior_Layout_behavior_hideable
      */
     public boolean isHideable() {
         return mHideable;
@@ -444,7 +448,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * after it is expanded once. Setting this to true has no effect unless the sheet is hideable.
      *
      * @param skipCollapsed True if the bottom sheet should skip the collapsed state.
-     * @attr ref android.support.design.R.styleable#BottomSheetBehavior_Layout_behavior_skipCollapsed
+     * @attr ref R.styleable#BottomSheetBehavior_Layout_behavior_skipCollapsed
      */
     public void setSkipCollapsed(boolean skipCollapsed) {
         mSkipCollapsed = skipCollapsed;
@@ -455,7 +459,7 @@ public class TopSheetBehavior<V extends View> extends CoordinatorLayout.Behavior
      * after it is expanded once.
      *
      * @return Whether the bottom sheet should skip the collapsed state.
-     * @attr ref android.support.design.R.styleable#BottomSheetBehavior_Layout_behavior_skipCollapsed
+     * @attr ref R.styleable#BottomSheetBehavior_Layout_behavior_skipCollapsed
      */
     public boolean getSkipCollapsed() {
         return mSkipCollapsed;
